@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SC Cargo Hauler</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>SC Cargo Hauler</h1>
+    <p class="subtitle">Star Citizen Cargo Run Tracker</p>
+  </header>
+
+  <main>
+    <!-- Ship Selection -->
+    <section id="ship-section" class="panel">
+      <h2>Ship</h2>
+      <div class="ship-selector">
+        <div class="field">
+          <label for="ship-select">Select Ship</label>
+          <select id="ship-select">
+            <option value="">— Choose a ship —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="custom-scu">or Custom SCU Limit</label>
+          <input type="number" id="custom-scu" min="1" placeholder="e.g. 96">
+        </div>
+        <div id="ship-capacity" class="capacity-display hidden">
+          <span class="label">Cargo Capacity:</span>
+          <span id="max-scu-display" class="value">0</span>
+          <span class="unit">SCU</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cargo Alert Banner -->
+    <div id="cargo-alert" class="alert hidden">
+      <span class="alert-icon">&#9888;</span>
+      <span id="alert-message">Cargo limit exceeded!</span>
+    </div>
+
+    <!-- Current Run -->
+    <section id="run-section" class="panel">
+      <div class="panel-header">
+        <h2>Current Run</h2>
+        <div class="run-actions">
+          <button id="btn-complete-run" class="btn btn-success" disabled>Complete Run</button>
+          <button id="btn-clear-run" class="btn btn-danger" disabled>Clear Run</button>
+        </div>
+      </div>
+
+      <!-- Add Contract Form -->
+      <div id="add-contract" class="contract-form">
+        <h3>Add Contract</h3>
+        <div class="form-grid">
+          <div class="field">
+            <label for="contract-commodity">Commodity</label>
+            <select id="contract-commodity">
+              <option value="">— Select —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="contract-commodity-custom">or Custom Commodity</label>
+            <input type="text" id="contract-commodity-custom" placeholder="e.g. Quantainium">
+          </div>
+          <div class="field">
+            <label for="contract-scu">SCU Amount</label>
+            <input type="number" id="contract-scu" min="1" placeholder="SCU">
+          </div>
+          <div class="field">
+            <label for="contract-payout">Payout (UEC)</label>
+            <input type="number" id="contract-payout" min="0" placeholder="UEC">
+          </div>
+          <div class="field">
+            <label for="contract-pickup">Pickup Location</label>
+            <select id="contract-pickup">
+              <option value="">— Select —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="contract-pickup-custom">or Custom Pickup</label>
+            <input type="text" id="contract-pickup-custom" placeholder="Custom location">
+          </div>
+          <div class="field">
+            <label for="contract-dropoff">Drop-off Location</label>
+            <select id="contract-dropoff">
+              <option value="">— Select —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="contract-dropoff-custom">or Custom Drop-off</label>
+            <input type="text" id="contract-dropoff-custom" placeholder="Custom location">
+          </div>
+          <div class="field">
+            <label for="contract-distance">Distance (km)</label>
+            <input type="number" id="contract-distance" min="0" step="0.1" placeholder="Optional">
+          </div>
+        </div>
+        <button id="btn-add-contract" class="btn btn-primary">Add Contract</button>
+      </div>
+
+      <!-- Contract List -->
+      <div id="contract-list-wrapper">
+        <table id="contract-table">
+          <thead>
+            <tr>
+              <th>Commodity</th>
+              <th>SCU</th>
+              <th>Pickup</th>
+              <th>Drop-off</th>
+              <th>Payout</th>
+              <th>Dist (km)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="contract-body">
+          </tbody>
+        </table>
+        <p id="no-contracts" class="empty-state">No contracts added yet. Add one above to start your run.</p>
+      </div>
+
+      <!-- Run Summary -->
+      <div id="run-summary" class="summary hidden">
+        <h3>Run Summary</h3>
+        <div class="summary-grid">
+          <div class="stat">
+            <span class="stat-label">Contracts</span>
+            <span id="stat-contracts" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Total SCU</span>
+            <span id="stat-scu" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Remaining SCU</span>
+            <span id="stat-remaining" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Total Payout</span>
+            <span id="stat-payout" class="stat-value">0 UEC</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">UEC / SCU</span>
+            <span id="stat-uec-scu" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">UEC / km</span>
+            <span id="stat-uec-km" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Total Distance</span>
+            <span id="stat-distance" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Unique Drop-offs</span>
+            <span id="stat-dropoffs" class="stat-value">0</span>
+          </div>
+        </div>
+        <!-- SCU usage bar -->
+        <div class="usage-bar-container">
+          <div class="usage-bar-label">
+            <span>SCU Usage</span>
+            <span id="usage-percent">0%</span>
+          </div>
+          <div class="usage-bar">
+            <div id="usage-fill" class="usage-fill"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Historical Runs -->
+    <section id="history-section" class="panel">
+      <div class="panel-header">
+        <h2>Run History</h2>
+        <button id="btn-clear-history" class="btn btn-danger btn-small">Clear History</button>
+      </div>
+      <div id="history-list">
+        <p id="no-history" class="empty-state">No completed runs yet.</p>
+      </div>
+
+      <!-- History Analysis -->
+      <div id="history-analysis" class="summary hidden">
+        <h3>Lifetime Stats</h3>
+        <div class="summary-grid">
+          <div class="stat">
+            <span class="stat-label">Total Runs</span>
+            <span id="hist-runs" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Total UEC Earned</span>
+            <span id="hist-uec" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Total SCU Hauled</span>
+            <span id="hist-scu" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Avg UEC / Run</span>
+            <span id="hist-avg-uec" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Avg UEC / SCU</span>
+            <span id="hist-avg-uec-scu" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Best Run (UEC)</span>
+            <span id="hist-best" class="stat-value">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>SC Cargo Hauler &mdash; Fan-made tool for Star Citizen cargo hauling</p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

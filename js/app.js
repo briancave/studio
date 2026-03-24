@@ -466,6 +466,61 @@
     document.getElementById("hist-best").textContent = bestUec.toLocaleString() + " UEC";
   }
 
+  // Export CSV
+  var btnExport = document.getElementById("btn-export-csv");
+  btnExport.addEventListener("click", function () {
+    if (history.length === 0) return;
+
+    var rows = [
+      ["Run Date", "Ship", "Max SCU", "Commodity", "SCU", "Pickup", "Drop-off", "Payout (UEC)", "Distance (km)", "Run Total SCU", "Run Total Payout (UEC)", "Run Total Distance (km)"]
+    ];
+
+    history.forEach(function (run) {
+      var dateStr = new Date(run.date).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      run.contracts.forEach(function (c) {
+        rows.push([
+          dateStr,
+          run.ship,
+          run.maxScu,
+          c.commodity,
+          c.scu,
+          c.pickup,
+          c.dropoff,
+          c.payout,
+          c.distance || "",
+          run.totalScu,
+          run.totalPayout,
+          run.totalDistance
+        ]);
+      });
+    });
+
+    var csv = rows.map(function (row) {
+      return row.map(function (cell) {
+        var s = String(cell);
+        if (s.indexOf(",") !== -1 || s.indexOf('"') !== -1 || s.indexOf("\n") !== -1) {
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      }).join(",");
+    }).join("\n");
+
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "sc-cargo-hauler-export.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
   // Clear history
   btnClearHistory.addEventListener("click", function () {
     if (history.length === 0) return;
